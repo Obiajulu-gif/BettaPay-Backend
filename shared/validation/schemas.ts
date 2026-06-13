@@ -162,3 +162,36 @@ export function parseEvent(raw: unknown) {
 export function safeParseEvent(raw: unknown) {
   return eventSchemas.safeParse(raw);
 }
+
+// ─── Request Body Schemas (used by API Gateway route handlers) ────────────────
+
+export const CreateMerchantBody = z.object({
+  id: z.string().min(1, 'id is required'),
+  name: z.string().min(1, 'name is required'),
+  ownerId: z.string().optional(),
+  settings: z.record(z.unknown()).optional(),
+});
+
+export const CreatePaymentBody = z.object({
+  merchantId: z.string().min(1, 'merchantId is required'),
+  amount: z.string().regex(/^\d+(\.\d+)?$/, 'amount must be a numeric string'),
+  asset: z.string().min(1, 'asset is required'),
+  payerId: z.string().optional(),
+  reference: z.string().optional(),
+});
+
+export const CreateSettlementBody = z.object({
+  merchantId: z.string().min(1, 'merchantId is required'),
+  amount: z.string().regex(/^\d+(\.\d+)?$/, 'amount must be a numeric string'),
+  asset: z.string().min(1, 'asset is required'),
+});
+
+export const AuthTokenBody = z.object({
+  merchantId: z.string().min(1, 'merchantId is required'),
+  secret: z.string().min(1, 'secret is required'),
+});
+
+export type CreateMerchantBody = z.infer<typeof CreateMerchantBody>;
+export type CreatePaymentBody = z.infer<typeof CreatePaymentBody>;
+export type CreateSettlementBody = z.infer<typeof CreateSettlementBody>;
+export type AuthTokenBody = z.infer<typeof AuthTokenBody>;
