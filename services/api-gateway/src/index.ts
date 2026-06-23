@@ -30,6 +30,7 @@ import {
   AuthTokenBody
 } from '@bettapay/validation';
 import { PrismaClient } from '@prisma/client';
+import rateLimit from '@fastify/rate-limit';
 
 declare module 'fastify' {
   export interface FastifyInstance {
@@ -128,6 +129,13 @@ fastify.register(fastifyJwt, {
   }
 });
 
+// Rate limiting: global default and route overrides
+fastify.register(rateLimit, {
+  max: 1000,
+  timeWindow: '1 minute',
+  addHeaders: true
+});
+
 fastify.register(rateLimit, {
   max: 100,
   timeWindow: '1 minute',
@@ -162,7 +170,7 @@ fastify.get('/api/health', async (request, reply) => {
   return { status: 'healthy', env: env.NODE_ENV };
 });
 
-fastify.post('/api/auth/token', async (request, reply) => {
+fastify.post('/api/auth/token', { config: { rateLimit: { max: 10, timeWindow: '1 minute' } } }, async (request, reply) => {
   try {
     const d = AuthTokenBody.parse(request.body);
     const merchant = await prisma.merchant.findFirst({ where: { id: d.merchantId, deletedAt: null } });
